@@ -1,5 +1,9 @@
 import matplotlib.pyplot as plt
-from classes.slotPattern import Slot, Pattern
+import copy
+#from classes.slotPattern import Slot, Pattern
+from classes.Pattern import Pattern
+from classes.Slot import Slot, OvalSlot, SlotTransform, SlotPlotter
+from classes.Objects import PlotterPrepare
 import ezdxf
 
 
@@ -11,7 +15,6 @@ class Menu:
 
         self.slot = slot
         self.pattern = pattern
-        self.pattern.slot = self.slot
         self.patternGenerator = None
 
     def __call__(self, *args, **kwargs):
@@ -53,12 +56,15 @@ class Menu:
         ax.set_xlim([-10, self.pattern.length+10])
         ax.set_ylim([-10, self.pattern.height+10])
 
-        ax.add_patch(self.pattern.getBoundaryAsPatch())
+        ax.add_patch(PlotterPrepare
+                     .convert2patch(self.pattern.domain))
 
         for origin in self.pattern.origins:
             x, y = origin
-            self.slot.offsetSlot(xOffset=x, yOffset=y)
-            ax.add_collection(self.slot.getPatchCollector())
+            obj2plot = copy.deepcopy(self.pattern.slot)
+            SlotTransform.setOffset(obj2plot, x, y)
+            col = SlotPlotter.ovalSlot2collection(obj2plot)
+            ax.add_collection(col)
 
         plt.show()
 
@@ -106,7 +112,3 @@ class Menu:
         # Zapisanie pliku DXF
         doc.saveas(file_name)
         print(f'Plik DXF zapisany jako {file_name}')
-
-
-
-
